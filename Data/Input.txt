@@ -1,0 +1,16 @@
+int a,b;
+int c;
+float x,y;
+float z;
+int array[0-4] q,r;
+int array[0-4] s,
+struct foo{
+int h,
+string i;
+};
+struct cat{
+int d;
+string f;
+};
+struct foo aa,bb;
+struct cat cc;
