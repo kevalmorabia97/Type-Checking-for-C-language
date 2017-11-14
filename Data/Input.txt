@@ -1,16 +1,30 @@
-int a,b;
-int c;
-float x,y;
+int a,   b ;
+  int c;  
+
+float x   , y;
 float z;
-int array[0-4] q,r;
-int array[0-4] s,
-struct foo{
-int h,
-string i;
-};
-struct cat{
-int d;
-string f;
-};
+
+int  axxx[5], bxxx[5], xyz;
+int cxxx[5];
+
+struct foo  {  int h;float i;};
+
+struct cat{     int d;float f;};
+
 struct foo aa,bb;
 struct cat cc;
+
+struct foo fa[5], fb;
+
+int square (int a1[10], int a2);
+float sq2(int b1[10], int *b2) ; 
+struct foo funcReturningStruct(int xa[4]);
+
+int* pt1, notAPointer;
+int * pt2;
+
+int * * pt3;
+int * *pt4;
+
+int *axx[5], *zzz[5];
+int* bxx[5]; 

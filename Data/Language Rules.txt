@@ -1,0 +1,5 @@
+for C language
+
+int a[5],b[5],*x[10], z[10], *x2[10]; --> a,b are internal name equivalent, x,x2 are internal name equivalent
+
+struct def in one line only
