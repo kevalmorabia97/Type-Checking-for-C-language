@@ -194,11 +194,16 @@ public class TypeCheck {
 			s = s.replace(", ", ",").replace(" ,",",").replace("; ", ";").replace(" ;",";"); 
 			s = s.replace(" (","(").replace("( ", "(").replace(" )",")").replace(") ", ")").trim(); 
 			if(s.length()==0)	continue;
-			//System.out.println(s);
 			
 			if(s.contains("(")) { // function prototype
 				addFuncType(s);
 			}else if(s.contains("struct") && (s.contains("{") || !s.contains(";"))) { // struct definition, can be single lined or multi lined
+				if(!s.contains("}")) {
+					do {
+						String next = br.readLine().trim();
+						s+=next;
+					}while(!s.contains("}"));
+				}
 				addStructDef(s);
 			}else { // var type i.e. int a[10], *b, c; OR struct foo a,b[100];
 				LinkedHashMap<String,String> tempVars = getVarType(s, true);

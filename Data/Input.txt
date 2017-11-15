@@ -8,10 +8,14 @@ int  axxx[5], bxxx[5], xyz;
 int cxxx[5];
 
 struct foo  {  int h;float i,jkl;};
-
-struct cat{     int d;float f; float kfc;};
-
-struct strct{int qwe[10][20]; struct foo tre,oiu[6] ; float *xnj  ;float* xctg;};
+struct cat{
+	int d;
+	float f;
+	float kfc;
+};
+struct strct{ int qwe[10][20]; 
+struct foo tre,*oiu[6] ; 
+	float* xctg;};
 
 struct foo aa,bb;
 struct cat cc;
