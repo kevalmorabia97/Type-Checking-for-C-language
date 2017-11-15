@@ -1,31 +1,53 @@
-0 int
-1 int
-2 int
-3 float
-4 float
-5 float
-6 array:5:int
-7 array:5:int
-8 int
-9 array:5:int
-10 struct foo
-11 struct foo
-12 struct cat
-13 array:5:struct foo
-14 struct foo
-15 func|ptr_int|array:10:int!int
-16 func|float|array:10:int!ptr_int
-17 func|struct foo|array:4:int
-18 ptr_int
-19 int
-20 ptr_int
-21 ptr_int
-22 ptr_ptr_int
-23 ptr_ptr_int
-24 array:5:ptr_int
-25 array:5:ptr_int
-26 array:5:ptr_int
+Structs:
+struct foo-->int!float!float
+struct cat-->int!float!float
+struct strct-->array:10_20:int!struct foo!array:6:ptr_struct foo!ptr_float
 
+Name Equivalence:
+[aa, bb, fb]
+[cc]
+[x, y, z]
+[a, b, c, xyz, notAPointer]
+
+Internal Name Equivalence:
+[axxx, bxxx]
+[pt2, ppp]
+[axx, zzz]
+[aa, bb, fb]
+[cc]
+[x, y, z]
+[a, b, c, xyz, notAPointer]
+
+Variables:
+0  : a                    --> int
+1  : b                    --> int
+2  : c                    --> int
+3  : x                    --> float
+4  : y                    --> float
+5  : z                    --> float
+6  : axxx                 --> array:5:int
+7  : bxxx                 --> array:5:int
+8  : xyz                  --> int
+9  : cxxx                 --> array:5:int
+10 : aa                   --> struct foo
+11 : bb                   --> struct foo
+12 : cc                   --> struct cat
+13 : fa                   --> array:5:struct foo
+14 : fb                   --> struct foo
+15 : square               --> func|ptr_int|array:10:int!int
+16 : sq2                  --> func|float|array:10:int!ptr_int
+17 : funcReturningStruct  --> func|struct foo|array:4:int
+18 : pt1                  --> ptr_int
+19 : notAPointer          --> int
+20 : pt2                  --> ptr_int
+21 : ppp                  --> ptr_int
+22 : pt3                  --> ptr_ptr_int
+23 : pt4                  --> ptr_ptr_int
+24 : axx                  --> array:5:ptr_int
+25 : zzz                  --> array:5:ptr_int
+26 : bxx                  --> array:5:ptr_int
+
+Structural Equivalence Matrix:
 -1   |0    |1    |2    |3    |4    |5    |6    |7    |8    |9    |10   |11   |12   |13   |14   |15   |16   |17   |18   |19   |20   |21   |22   |23   |24   |25   |26   |
 0    | true|     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
 1    | true| true|     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
@@ -54,51 +76,3 @@
 24   |false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false| true|     |     |
 25   |false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false| true| true|     |
 26   |false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false|false| true| true| true|
-Structs:
-struct foo-->int!float!float
-struct cat-->int!float!float
-struct strct-->array:10_20:int!struct foo!array:6:ptr_struct foo!ptr_float
-
-Variables:
-a-->int
-b-->int
-c-->int
-x-->float
-y-->float
-z-->float
-axxx-->array:5:int
-bxxx-->array:5:int
-xyz-->int
-cxxx-->array:5:int
-aa-->struct foo
-bb-->struct foo
-cc-->struct cat
-fa-->array:5:struct foo
-fb-->struct foo
-square-->func|ptr_int|array:10:int!int
-sq2-->func|float|array:10:int!ptr_int
-funcReturningStruct-->func|struct foo|array:4:int
-pt1-->ptr_int
-notAPointer-->int
-pt2-->ptr_int
-ppp-->ptr_int
-pt3-->ptr_ptr_int
-pt4-->ptr_ptr_int
-axx-->array:5:ptr_int
-zzz-->array:5:ptr_int
-bxx-->array:5:ptr_int
-
-Name Equivalence:
-[aa, bb, fb]
-[cc]
-[x, y, z]
-[a, b, c, xyz, notAPointer]
-
-Internal Name Equivalence:
-[axxx, bxxx]
-[pt2, ppp]
-[axx, zzz]
-[aa, bb, fb]
-[cc]
-[x, y, z]
-[a, b, c, xyz, notAPointer]

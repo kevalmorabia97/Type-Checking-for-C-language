@@ -167,11 +167,6 @@ public class TypeCheck {
 			System.out.println(tmp+"-->"+structs.get(tmp));
 		}
 		
-		System.out.println("\nVariables:");
-		for(String tmp : vars.keySet()) {
-			System.out.println(tmp+"-->"+vars.get(tmp));
-		}
-		
 		System.out.println("\nName Equivalence:");
 		for(String[] sarr : nameEquivalence) {
 			System.out.println(Arrays.toString(sarr));
@@ -180,6 +175,22 @@ public class TypeCheck {
 		System.out.println("\nInternal Name Equivalence:");
 		for(String[] sarr : internalNameEquivalence) {
 			System.out.println(Arrays.toString(sarr));
+		}
+		
+		System.out.println("\nVariables:");
+		int index = 0;
+		for(String tmp : vars.keySet()) {
+			System.out.printf("%-3d: %-20s --> %s\n",index++, tmp, vars.get(tmp));
+		}
+		
+		System.out.println("\nStructural Equivalence Matrix:");
+		for(int i = -1; i < index; i++)		System.out.printf("%-5d|",i);
+		System.out.println();
+		for(int i = 0; i < index; i++) {
+			System.out.printf("%-5d|",i);
+			for(int j = 0; j <= i; j++)	System.out.printf("%5b|",structuralEquivalenceMatrix[i][j]);
+			for(int j = i+1; j < index; j++)	System.out.print("     |");	
+			System.out.println();
 		}
 	}
 	
@@ -244,18 +255,6 @@ public class TypeCheck {
 				if(!intToVar.get(i).equals(intToVar.get(j)))	structuralEquivalenceMatrix[i][j] = false;
 				structuralEquivalenceMatrix[j][i] = structuralEquivalenceMatrix[i][j];
 			}
-		}
-		
-		for(int i = 0; i < index; i++)	System.out.println(i+" "+intToVar.get(i));
-		System.out.println();
-		
-		for(int i = -1; i < index; i++)		System.out.printf("%-5d|",i);
-		System.out.println();
-		for(int i = 0; i < index; i++) {
-			System.out.printf("%-5d|",i);
-			for(int j = 0; j <= i; j++)	System.out.printf("%5b|",structuralEquivalenceMatrix[i][j]);
-			for(int j = i+1; j < index; j++)	System.out.print("     |");	
-			System.out.println();
 		}
 	}
 	
