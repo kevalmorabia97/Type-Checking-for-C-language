@@ -3,8 +3,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 public class TypeCheck {
 	ArrayList<String[]> nameEquivalence = new ArrayList<>(), internalNameEquivalence = new ArrayList<>();
@@ -13,7 +13,7 @@ public class TypeCheck {
 	 * [aa,bb]
 	 */	
 	
-	HashMap<String,String> vars = new HashMap<>();
+	LinkedHashMap<String,String> vars = new LinkedHashMap<>();
 	/* All variables or functions in input file with their types
 	 * Key     Val
 	 * 
@@ -35,13 +35,13 @@ public class TypeCheck {
 	 * func2   func|ptr_ptr_int|struct foo!float i.e. function with return type = ptr to ptr to int, 2 args which are 'struct foo' and 'float' respectively
 	 */
 	
-	HashMap<String,String> structs = new HashMap<>();
+	LinkedHashMap<String,String> structs = new LinkedHashMap<>();
 	/*
-	 * Key     Val
+	 * Key=name     Val=struct definition
 	 * 
 	 * STRUCT TRANSFORMATION: <types of variables seperated bty !>
-	 * foo     int!float
-	 * bar     array:int:4!struct foo!ptr_int i.e. "struct bar{int a[4] ; struct foo b; int* c;};"
+	 * foo          int!float
+	 * bar          array:4:int!int!struct foo!ptr_int i.e. "struct bar{int a[4],t ; struct foo b; int* c;};"
 	 */
 	
 	public TypeCheck(String inputFile) throws IOException {
@@ -50,8 +50,8 @@ public class TypeCheck {
 	}
 	
 	// getVarType("int* *a,b[6][8];") returns (a,ptr_ptr_int) and (b,array:int:6_8)
-	private HashMap<String,String> getVarType(String s, boolean findInternalNameEquivalences) {
-		HashMap<String,String> tempVars = new HashMap<>();
+	private LinkedHashMap<String,String> getVarType(String s, boolean findInternalNameEquivalences) {
+		LinkedHashMap<String,String> tempVars = new LinkedHashMap<>();
 		String type;
 		int space;
 		if(s.startsWith("struct")) // space is 2nd space
@@ -74,34 +74,34 @@ public class TypeCheck {
 		 * 
 		 * So, a and c have internal name equivalence
 		 */
-		HashMap<String,ArrayList<String>> arraysForInternalNameEquivalence = new HashMap<>();
+		LinkedHashMap<String,ArrayList<String>> arraysForInternalNameEquivalence = new LinkedHashMap<>();
 		String[] variables = s.replace(" ","").replace(";","").split(",");
 		for(String v : variables) {
-			String hashMapValue = "";
+			String LinkedHashMapValue = "";
 			if(v.contains("[")) { // array
-				hashMapValue+="array:";
+				LinkedHashMapValue+="array:";
 				String dims = v.substring(v.indexOf("["),v.lastIndexOf("]")+1);
 				for(String d : dims.replace("[","").split("]")) {
-					hashMapValue+=d+"_";
+					LinkedHashMapValue+=d+"_";
 				}
-				hashMapValue = hashMapValue.substring(0,hashMapValue.length()-1)+":";//remove last _ and append :
+				LinkedHashMapValue = LinkedHashMapValue.substring(0,LinkedHashMapValue.length()-1)+":";//remove last _ and append :
 				v = v.substring(0,v.indexOf("[")); // **x[20][50] --> **x
 			}
 			
 			if(v.contains("*")) {
 				String copy = new String(v);
 				int ptrs = copy.length() - copy.replace("*", "").length();
-				for(int i = 0; i < ptrs; i++)	hashMapValue+="ptr_";
+				for(int i = 0; i < ptrs; i++)	LinkedHashMapValue+="ptr_";
 				v = v.substring(v.lastIndexOf("*")+1);
 			}
 			
-			hashMapValue += type;
-			tempVars.put(v, hashMapValue);
+			LinkedHashMapValue += type;
+			tempVars.put(v, LinkedHashMapValue);
 			
-			if(hashMapValue.startsWith("array")) {
-				if(!arraysForInternalNameEquivalence.containsKey(hashMapValue))
-					arraysForInternalNameEquivalence.put(hashMapValue, new ArrayList<>());
-				arraysForInternalNameEquivalence.get(hashMapValue).add(v);
+			if(LinkedHashMapValue.startsWith("array")) {
+				if(!arraysForInternalNameEquivalence.containsKey(LinkedHashMapValue))
+					arraysForInternalNameEquivalence.put(LinkedHashMapValue, new ArrayList<>());
+				arraysForInternalNameEquivalence.get(LinkedHashMapValue).add(v);
 			}
 		}
 		
@@ -116,12 +116,26 @@ public class TypeCheck {
 	
 	// s = "struct foo{int a[10]; int* b; struct bar br;};"
 	private void addStructDef(String s) {
+		LinkedHashMap<String, String> tempVars;
+
+		String structName = s.substring(0,s.indexOf("{")).trim(), structType="";
+		s = s.substring(s.indexOf("{")+1,s.indexOf("}")).trim();
+		System.out.println(s);
 		
+		String[] arguments = s.split(";");
+		for(String arg : arguments) {
+			tempVars = getVarType(arg, false);
+			for(String v : tempVars.keySet()) {
+				structType+=tempVars.get(v)+"!";
+			}
+		}
+		structType = structType.substring(0,structType.length()-1);
+		structs.put(structName, structType);
 	}
 	
 	// s = "int square(int x, int y);" --> func:int:int_int
 	private void addFuncType(String s) {
-		HashMap<String, String> tempVars;
+		LinkedHashMap<String, String> tempVars;
 		s = s.replace(";","");
 		String returnType="", funcName="";
 		
@@ -146,7 +160,7 @@ public class TypeCheck {
 		vars.put(funcName, funcType);
 	}
 	
-	private void printEquivalences() {
+	private void print() {
 		System.out.println("Name Equivalence:");
 		for(String[] sarr : nameEquivalence) {
 			System.out.println(Arrays.toString(sarr));
@@ -161,6 +175,11 @@ public class TypeCheck {
 		for(String tmp : vars.keySet()) {
 			System.out.println(tmp+"-->"+vars.get(tmp));
 		}
+		
+		System.out.println("\nStructs");
+		for(String tmp : structs.keySet()) {
+			System.out.println(tmp+"-->"+structs.get(tmp));
+		}
 	}
 	
 	private void parseFile(String inputFile) throws IOException {
@@ -171,7 +190,7 @@ public class TypeCheck {
 		while((s = br.readLine())!=null) {
 			// "  struct  foo a, b , c,d ;  " --> "struct foo a,b,c,d;"
 			s = s.trim(); // remove starting and trailing spaces
-			s = s.replace(" +", " "); // replace multiple spaces by a single space
+			s = s.replaceAll(" +", " "); // replace multiple spaces by a single space
 			s = s.replace(", ", ",").replace(" ,",",").replace("; ", ";").replace(" ;",";"); 
 			s = s.replace(" (","(").replace("( ", "(").replace(" )",")").replace(") ", ")").trim(); 
 			if(s.length()==0)	continue;
@@ -182,7 +201,7 @@ public class TypeCheck {
 			}else if(s.contains("struct") && (s.contains("{") || !s.contains(";"))) { // struct definition, can be single lined or multi lined
 				addStructDef(s);
 			}else { // var type i.e. int a[10], *b, c; OR struct foo a,b[100];
-				HashMap<String,String> tempVars = getVarType(s, true);
+				LinkedHashMap<String,String> tempVars = getVarType(s, true);
 				for(String v : tempVars.keySet())	vars.put(v, tempVars.get(v));
 			}
 		}
@@ -212,7 +231,7 @@ public class TypeCheck {
 	
 	public static void main(String[] args) throws IOException {
 		TypeCheck tc = new TypeCheck("Data/Input.txt");
-		tc.printEquivalences();
+		tc.print();
 	}
 
 }
