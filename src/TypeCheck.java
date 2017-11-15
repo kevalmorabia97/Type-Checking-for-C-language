@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class TypeCheck {
+	boolean[][] structuralEquivalenceMatrix;
 	ArrayList<String[]> nameEquivalence = new ArrayList<>(), internalNameEquivalence = new ArrayList<>();
 	/* nameEquivalence
 	 * [a,b,c]
@@ -231,9 +232,30 @@ public class TypeCheck {
 	}
 	
 	private void findStructuralEquivalence(){
-		HashSet<String> types = new HashSet<>(vars.values());
-		for(String t : types) {
-			
+		LinkedHashMap<Integer,String> intToVar = new LinkedHashMap<>();
+		int index = 0;	
+		for(String type : vars.values())	intToVar.put(index++, type);
+		
+		structuralEquivalenceMatrix = new boolean[index][index];
+		for(int i = 0; i < index; i++)	Arrays.fill(structuralEquivalenceMatrix[i],true);
+		
+		for(int i = 0; i < index; i++) {
+			for(int j = i+1; j < index; j++) {
+				if(!intToVar.get(i).equals(intToVar.get(j)))	structuralEquivalenceMatrix[i][j] = false;
+				structuralEquivalenceMatrix[j][i] = structuralEquivalenceMatrix[i][j];
+			}
+		}
+		
+		for(int i = 0; i < index; i++)	System.out.println(i+" "+intToVar.get(i));
+		System.out.println();
+		
+		for(int i = -1; i < index; i++)		System.out.printf("%-5d|",i);
+		System.out.println();
+		for(int i = 0; i < index; i++) {
+			System.out.printf("%-5d|",i);
+			for(int j = 0; j <= i; j++)	System.out.printf("%5b|",structuralEquivalenceMatrix[i][j]);
+			for(int j = i+1; j < index; j++)	System.out.print("     |");	
+			System.out.println();
 		}
 	}
 	
