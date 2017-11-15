@@ -15,27 +15,33 @@ public class TypeCheck {
 	
 	HashMap<String,String> vars = new HashMap<>();
 	/* All variables or functions in input file with their types
-	 * Key   Val
+	 * Key     Val
 	 * 
 	 * a       int
 	 * s       string
 	 * pt1     ptr_int i.e. pointer to int
 	 * pt2     ptr_struct foo
 	 * pt3     ptr_ptr_int i.e. pointer to pointer to int
+	 * aa      struct foo i.e. aa is a var of type foo 
+	 * 
+	 * ARRAY TRAMSFORMATION: array:<dimentions seperated by _>:<type>
 	 * q       array:int:4 i.e. array of type int, 1 dimention which has size 4
 	 * aOfPtr  array:5:ptr_int i.e. array of pointer to int of size 5
 	 * a2      array:4_9:struct foo i.e. array of type struct foo, 2 dimentions which have sizes 4 & 9 respectively 
-	 * aa      struct foo i.e. aa is a var of type foo 
-	 * f1      func:void: i.e. function with return type = void and no args
-	 * square  func:float:struct foo_int i.e. function with return type = float, 2 args which are 'struct foo' and 'int' respectively
-	 * func2   func:ptr_ptr_int:struct foo_float i.e. function with return type = ptr to ptr to int, 2 args which are 'struct foo' and 'float' respectively
+	 * 
+	 * FUNTIOND TRANSFORMATION: func|<returnType>|<arguments seperated by !>
+	 * f1      func|void| i.e. function with return type = void and no args
+	 * square  func|float|struct foo!int i.e. function with return type = float, 2 args which are 'struct foo' and 'int' respectively
+	 * func2   func|ptr_ptr_int|struct foo!float i.e. function with return type = ptr to ptr to int, 2 args which are 'struct foo' and 'float' respectively
 	 */
 	
 	HashMap<String,String> structs = new HashMap<>();
 	/*
 	 * Key     Val
-	 * foo     int:float
-	 * bar     array_int_4:struct foo:ptr_int i.e. "struct bar{int a[4] ; struct foo b; int* c;};"
+	 * 
+	 * STRUCT TRANSFORMATION: <types of variables seperated bty !>
+	 * foo     int!float
+	 * bar     array:int:4!struct foo!ptr_int i.e. "struct bar{int a[4] ; struct foo b; int* c;};"
 	 */
 	
 	public TypeCheck(String inputFile) throws IOException {
@@ -43,8 +49,9 @@ public class TypeCheck {
 		findStructuralEquivalence();
 	}
 	
-	// addVarType("int* *a,b[6][8];") --> add (a,ptr_ptr_int) and (b,array:int:6_8) to vars
-	private void addVarType(String s) {
+	// getVarType("int* *a,b[6][8];") returns (a,ptr_ptr_int) and (b,array:int:6_8)
+	private HashMap<String,String> getVarType(String s, boolean findInternalNameEquivalences) {
+		HashMap<String,String> tempVars = new HashMap<>();
 		String type;
 		int space;
 		if(s.startsWith("struct")) // space is 2nd space
@@ -89,7 +96,7 @@ public class TypeCheck {
 			}
 			
 			hashMapValue += type;
-			vars.put(v, hashMapValue);
+			tempVars.put(v, hashMapValue);
 			
 			if(hashMapValue.startsWith("array")) {
 				if(!arraysForInternalNameEquivalence.containsKey(hashMapValue))
@@ -97,32 +104,45 @@ public class TypeCheck {
 				arraysForInternalNameEquivalence.get(hashMapValue).add(v);
 			}
 		}
-		for(ArrayList<String> INEArrays : arraysForInternalNameEquivalence.values()) {
-			if(INEArrays.size()==1)	continue;
-			internalNameEquivalence.add( (String[])INEArrays.toArray(new String[INEArrays.size()]) );
-		}
+		
+		if(findInternalNameEquivalences)
+			for(ArrayList<String> INEArrays : arraysForInternalNameEquivalence.values()) {
+				if(INEArrays.size()==1)	continue;
+				internalNameEquivalence.add( (String[])INEArrays.toArray(new String[INEArrays.size()]) );
+			}
+		
+		return tempVars;
 	}
 	
-	// s = "struct foo{int a[10], int* b, struct bar br;};"
+	// s = "struct foo{int a[10]; int* b; struct bar br;};"
 	private void addStructDef(String s) {
-
+		
 	}
 	
-	// s = "int square(int x, int y);"
+	// s = "int square(int x, int y);" --> func:int:int_int
 	private void addFuncType(String s) {
-		String returnType = "int";
-		String funcName = "Square";
-		String[] arguments = {"int","struct foo"};
+		HashMap<String, String> tempVars;
+		s = s.replace(";","");
+		String returnType="", funcName="";
 		
-		///////////////
-		// REMAINING
-		///////////////
-		
-		String funcType = "func:"+returnType+":";
-		for(int i = 0; i < arguments.length; i++) {
-			funcType+=arguments[i]+"_";
+		tempVars = getVarType(s.substring(0,s.indexOf("(")), false);
+		if(tempVars.size()!=1) System.err.println("ERROR: FUNCTION RETURN TYPE FINDING");
+		for(String v : tempVars.keySet()) {
+			funcName = v;
+			returnType = tempVars.get(v);
 		}
-		if(arguments.length>1)	funcType = funcType.substring(0, funcType.length()-1); // to remove last _
+
+		String[] arguments = s.substring(s.indexOf("(")+1,s.indexOf(")")).split(",");
+		
+		String funcType = "func|"+returnType+"|";
+		for(int i = 0; i < arguments.length; i++) {
+			tempVars = getVarType(arguments[i], false);
+			if(tempVars.size()!=1)	System.err.println("ERROR: FUNCTION ARGUMENT TYPE FINDING");
+			for(String v : tempVars.keySet()) {
+				funcType+=tempVars.get(v)+"!";
+			}
+		}
+		if(arguments.length>0)	funcType = funcType.substring(0, funcType.length()-1); // to remove last !
 		vars.put(funcName, funcType);
 	}
 	
@@ -153,15 +173,17 @@ public class TypeCheck {
 			s = s.trim(); // remove starting and trailing spaces
 			s = s.replace(" +", " "); // replace multiple spaces by a single space
 			s = s.replace(", ", ",").replace(" ,",",").replace("; ", ";").replace(" ;",";"); 
+			s = s.replace(" (","(").replace("( ", "(").replace(" )",")").replace(") ", ")").trim(); 
 			if(s.length()==0)	continue;
+			//System.out.println(s);
 			
 			if(s.contains("(")) { // function prototype
 				addFuncType(s);
 			}else if(s.contains("struct") && (s.contains("{") || !s.contains(";"))) { // struct definition, can be single lined or multi lined
-				//REMAINING for multi line struct definition
 				addStructDef(s);
 			}else { // var type i.e. int a[10], *b, c; OR struct foo a,b[100];
-				addVarType(s);
+				HashMap<String,String> tempVars = getVarType(s, true);
+				for(String v : tempVars.keySet())	vars.put(v, tempVars.get(v));
 			}
 		}
 		br.close();

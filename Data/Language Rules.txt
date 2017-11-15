@@ -1,5 +1,7 @@
-for C language
+for C language but doesnt have typedef
 
 int a[5],b[5],*x[10], z[10], *x2[10]; --> a,b are internal name equivalent, x,x2 are internal name equivalent
+
+func cannot return array
 
 struct def in one line only
