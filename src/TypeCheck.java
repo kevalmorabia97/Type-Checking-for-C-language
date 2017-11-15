@@ -71,42 +71,43 @@ public class TypeCheck {
 		/*
 		 * array:5:int     [a,c]
 		 * array:10:int    [b]
-		 * 
+		 * ptr_int         [x,y]
 		 * So, a and c have internal name equivalence
+		 *     x and y have internal name equivalence
 		 */
-		LinkedHashMap<String,ArrayList<String>> arraysForInternalNameEquivalence = new LinkedHashMap<>();
+		LinkedHashMap<String,ArrayList<String>> arraysAndPtrsForInternalNameEquivalence = new LinkedHashMap<>();
 		String[] variables = s.replace(" ","").replace(";","").split(",");
 		for(String v : variables) {
-			String LinkedHashMapValue = "";
+			String hashMapValue = "";
 			if(v.contains("[")) { // array
-				LinkedHashMapValue+="array:";
+				hashMapValue+="array:";
 				String dims = v.substring(v.indexOf("["),v.lastIndexOf("]")+1);
 				for(String d : dims.replace("[","").split("]")) {
-					LinkedHashMapValue+=d+"_";
+					hashMapValue+=d+"_";
 				}
-				LinkedHashMapValue = LinkedHashMapValue.substring(0,LinkedHashMapValue.length()-1)+":";//remove last _ and append :
+				hashMapValue = hashMapValue.substring(0,hashMapValue.length()-1)+":";//remove last _ and append :
 				v = v.substring(0,v.indexOf("[")); // **x[20][50] --> **x
 			}
 			
 			if(v.contains("*")) {
 				String copy = new String(v);
 				int ptrs = copy.length() - copy.replace("*", "").length();
-				for(int i = 0; i < ptrs; i++)	LinkedHashMapValue+="ptr_";
+				for(int i = 0; i < ptrs; i++)	hashMapValue+="ptr_";
 				v = v.substring(v.lastIndexOf("*")+1);
 			}
 			
-			LinkedHashMapValue += type;
-			tempVars.put(v, LinkedHashMapValue);
+			hashMapValue += type;
+			tempVars.put(v, hashMapValue);
 			
-			if(LinkedHashMapValue.startsWith("array")) {
-				if(!arraysForInternalNameEquivalence.containsKey(LinkedHashMapValue))
-					arraysForInternalNameEquivalence.put(LinkedHashMapValue, new ArrayList<>());
-				arraysForInternalNameEquivalence.get(LinkedHashMapValue).add(v);
+			if(hashMapValue.startsWith("array") || hashMapValue.startsWith("ptr")) {
+				if(!arraysAndPtrsForInternalNameEquivalence.containsKey(hashMapValue))
+					arraysAndPtrsForInternalNameEquivalence.put(hashMapValue, new ArrayList<>());
+				arraysAndPtrsForInternalNameEquivalence.get(hashMapValue).add(v);
 			}
 		}
 		
 		if(findInternalNameEquivalences)
-			for(ArrayList<String> INEArrays : arraysForInternalNameEquivalence.values()) {
+			for(ArrayList<String> INEArrays : arraysAndPtrsForInternalNameEquivalence.values()) {
 				if(INEArrays.size()==1)	continue;
 				internalNameEquivalence.add( (String[])INEArrays.toArray(new String[INEArrays.size()]) );
 			}
@@ -120,7 +121,6 @@ public class TypeCheck {
 
 		String structName = s.substring(0,s.indexOf("{")).trim(), structType="";
 		s = s.substring(s.indexOf("{")+1,s.indexOf("}")).trim();
-		System.out.println(s);
 		
 		String[] arguments = s.split(";");
 		for(String arg : arguments) {
@@ -161,7 +161,17 @@ public class TypeCheck {
 	}
 	
 	private void print() {
-		System.out.println("Name Equivalence:");
+		System.out.println("Structs:");
+		for(String tmp : structs.keySet()) {
+			System.out.println(tmp+"-->"+structs.get(tmp));
+		}
+		
+		System.out.println("\nVariables:");
+		for(String tmp : vars.keySet()) {
+			System.out.println(tmp+"-->"+vars.get(tmp));
+		}
+		
+		System.out.println("\nName Equivalence:");
 		for(String[] sarr : nameEquivalence) {
 			System.out.println(Arrays.toString(sarr));
 		}
@@ -169,16 +179,6 @@ public class TypeCheck {
 		System.out.println("\nInternal Name Equivalence:");
 		for(String[] sarr : internalNameEquivalence) {
 			System.out.println(Arrays.toString(sarr));
-		}
-
-		System.out.println("\nVariables");
-		for(String tmp : vars.keySet()) {
-			System.out.println(tmp+"-->"+vars.get(tmp));
-		}
-		
-		System.out.println("\nStructs");
-		for(String tmp : structs.keySet()) {
-			System.out.println(tmp+"-->"+structs.get(tmp));
 		}
 	}
 	
@@ -226,7 +226,10 @@ public class TypeCheck {
 	}
 	
 	private void findStructuralEquivalence(){
-		
+		HashSet<String> types = new HashSet<>(vars.values());
+		for(String t : types) {
+			
+		}
 	}
 	
 	public static void main(String[] args) throws IOException {

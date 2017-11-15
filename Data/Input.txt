@@ -23,7 +23,7 @@ float sq2(int b1[10], int *b2) ;
 struct foo funcReturningStruct(int xa[4]);
 
 int* pt1, notAPointer;
-int * pt2;
+int * pt2, *ppp;
 
 int * * pt3;
 int * *pt4;
