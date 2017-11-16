@@ -1,7 +1,11 @@
 Structs:
-struct foo-->int!float!float
-struct cat-->int!float!float
-struct strct-->array:10_20:int!struct foo!array:6:ptr_struct foo!ptr_float
+0  : struct foo           --> int!float!float!struct cat
+1  : struct cat           --> int!float!float!struct foo
+2  : struct strct         --> array:10_20:int!struct foo!array:6:ptr_struct foo!ptr_float
+-1 |0  |1  |2  |
+0  | T | T |   |
+1  | T | T |   |
+2  |   |   | T |
 
 Name Equivalence:
 [aa, bb, fb]
@@ -31,7 +35,7 @@ Variables:
 9  : cxxx                 --> array:5:int
 10 : aa                   --> struct foo
 11 : bb                   --> struct foo
-12 : cc                   --> struct cat
+12 : cc                   --> struct foo
 13 : fa                   --> array:5:struct foo
 14 : fb                   --> struct foo
 15 : square               --> func|ptr_int|array:10:int!int
@@ -59,11 +63,11 @@ Structural Equivalence Matrix:
 7  |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 8  | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
 9  |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-10 |   |   |   |   |   |   |   |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
-11 |   |   |   |   |   |   |   |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
-12 |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+10 |   |   |   |   |   |   |   |   |   |   | T | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
+11 |   |   |   |   |   |   |   |   |   |   | T | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
+12 |   |   |   |   |   |   |   |   |   |   | T | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
 13 |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |
-14 |   |   |   |   |   |   |   |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
+14 |   |   |   |   |   |   |   |   |   |   | T | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
 15 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |
 16 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |
 17 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |

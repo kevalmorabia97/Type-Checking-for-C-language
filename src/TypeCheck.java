@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 public class TypeCheck {
-	boolean[][] structuralEquivalenceMatrix;
+	boolean[][] structuralEquivalenceMatrix, structEqMatrix;
 	ArrayList<String[]> nameEquivalence = new ArrayList<>(), internalNameEquivalence = new ArrayList<>();
 	/* nameEquivalence
 	 * [a,b,c]
@@ -26,7 +26,7 @@ public class TypeCheck {
 	 * aa      struct foo i.e. aa is a var of type foo 
 	 * 
 	 * ARRAY TRAMSFORMATION: array:<dimentions seperated by _>:<type>
-	 * q       array:int:4 i.e. array of type int, 1 dimention which has size 4
+	 * q       array:4:int i.e. array of type int, 1 dimention which has size 4
 	 * aOfPtr  array:5:ptr_int i.e. array of pointer to int of size 5
 	 * a2      array:4_9:struct foo i.e. array of type struct foo, 2 dimentions which have sizes 4 & 9 respectively 
 	 * 
@@ -45,6 +45,7 @@ public class TypeCheck {
 	 * bar          array:4:int!int!struct foo!ptr_int i.e. "struct bar{int a[4],t ; struct foo b; int* c;};"
 	 */
 	
+	// CONSTRUCTOR
 	public TypeCheck(String inputFile) throws IOException {
 		parseFile(inputFile);
 		findStructuralEquivalence();
@@ -161,38 +162,6 @@ public class TypeCheck {
 		vars.put(funcName, funcType);
 	}
 	
-	private void print() {
-		System.out.println("Structs:");
-		for(String tmp : structs.keySet()) {
-			System.out.println(tmp+"-->"+structs.get(tmp));
-		}
-		
-		System.out.println("\nName Equivalence:");
-		for(String[] sarr : nameEquivalence) {
-			System.out.println(Arrays.toString(sarr));
-		}
-		
-		System.out.println("\nInternal Name Equivalence:");
-		for(String[] sarr : internalNameEquivalence) {
-			System.out.println(Arrays.toString(sarr));
-		}
-		
-		System.out.println("\nVariables:");
-		int index = 0;
-		for(String tmp : vars.keySet()) {
-			System.out.printf("%-3d: %-20s --> %s\n",index++, tmp, vars.get(tmp));
-		}
-		
-		System.out.println("\nStructural Equivalence Matrix:");
-		for(int i = -1; i < index; i++)		System.out.printf("%-3d|",i);
-		System.out.println();
-		for(int i = 0; i < index; i++) {
-			System.out.printf("%-3d|",i);	
-			for (int j = 0; j < index; j++)		System.out.print(structuralEquivalenceMatrix[i][j]?" T |":"   |");
-			System.out.println();
-		}
-	}
-	
 	private void parseFile(String inputFile) throws IOException {
 		//Input file should be syntactically correct
 		BufferedReader br = new BufferedReader(new FileReader(inputFile));
@@ -242,19 +211,140 @@ public class TypeCheck {
 	}
 	
 	private void findStructuralEquivalence(){
+		
+		// STEP 1: FIND STRUCTURALLY EQUIVALENT STRUCTS AND REPLACE THEM WITH ONE STRUCT
+		LinkedHashMap<String,Integer> typeToInt = new LinkedHashMap<>();
+		LinkedHashMap<Integer,String> intToType = new LinkedHashMap<>();
+		int totalStructs = 0;
+		for(String struct : structs.keySet()) {
+			typeToInt.put(struct, totalStructs);
+			intToType.put(totalStructs, struct);
+			totalStructs++;
+		}
+		
+		structEqMatrix = new boolean[totalStructs][totalStructs];
+		for(int i = 0; i < totalStructs; i++)	Arrays.fill(structEqMatrix[i], true);
+		boolean changes = true;
+		while(changes) {
+			changes = false;
+			for (int i = 0; i < totalStructs; i++) {
+				for (int j = i+1; j < totalStructs; j++) {
+					if(structEqMatrix[i][j] == false)	continue;
+					String s1 = structs.get(intToType.get(i)), s2 = structs.get(intToType.get(j));
+					String[] tokens1 = s1.split("!"), tokens2 = s2.split("!");
+					if(tokens1.length != tokens2.length) {
+						structEqMatrix[i][j] = false;
+						changes = true;
+						continue;
+					}
+					for(int k = 0; k < tokens1.length; k++) {
+						String t1 = tokens1[k], t2 = tokens2[k];
+						if(t1.equals(t2))	continue;
+						if(t1.contains("struct") && t2.contains("struct")) {
+							/*
+							 * CASE 1: "array:6:ptr_struct foo" and "array:4:ptr_struct cat"
+							 * CASE 2: "array:4:ptr_struct foo" and "array:4:ptr_struct cat"
+							 */		
+							int idx1 = t1.indexOf("struct"), idx2 = t2.indexOf("struct");
+							if(!t1.substring(0, idx1).equals(t2.substring(0, idx2))) { // CASE 1
+								structEqMatrix[i][j] = false;
+								changes = true;
+								break;
+							}else { // CASE 2
+								t1 = t1.substring(idx1); 
+								t2 = t2.substring(idx2);
+								// t1 = struct foo, t2 = struct cat
+								if(structEqMatrix[typeToInt.get(t1)][typeToInt.get(t2)] == false) {
+									structEqMatrix[i][j] = false;
+									changes = true;
+									break;
+								}
+							}
+						}else {
+							structEqMatrix[i][j] = false;
+							changes = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+		for(int i = 0; i < totalStructs; i++)
+			for(int j = 0; j < i; j++)	structEqMatrix[i][j] = structEqMatrix[j][i];
+		
+		boolean[] marked = new boolean[totalStructs];
+		for(int i = 0; i < totalStructs; i++) {
+			if(marked[i])	continue;
+			marked[i] = true;
+			String s1 = intToType.get(i); 
+			for(int j = i+1; j < totalStructs; j++) {
+				if(marked[j])	continue;
+				if(structEqMatrix[i][j]) {
+					marked[j] = true;
+					String s2 = intToType.get(j);
+					for(String v : vars.keySet()) {
+						vars.put(v,vars.get(v).replace(s2, s1));
+					}
+				}
+			}
+		}
+		
+		//STEP 2: FIND STRUCTURAL EQUIVALENCE MATRIX
 		LinkedHashMap<Integer,String> intToVar = new LinkedHashMap<>();
-		int index = 0;	
-		for(String type : vars.values())	intToVar.put(index++, type);
+		int totalVars = 0;	
+		for(String type : vars.values())	intToVar.put(totalVars++, type);
 		
-		structuralEquivalenceMatrix = new boolean[index][index];
-		for(int i = 0; i < index; i++)	Arrays.fill(structuralEquivalenceMatrix[i],true);
+		structuralEquivalenceMatrix = new boolean[totalVars][totalVars];
+		for(int i = 0; i < totalVars; i++)	Arrays.fill(structuralEquivalenceMatrix[i],true);
 		
-		for(int i = 0; i < index; i++) {
-			for(int j = i+1; j < index; j++) {
+		for(int i = 0; i < totalVars; i++) {
+			for(int j = i+1; j < totalVars; j++) {
 				structuralEquivalenceMatrix[i][j] = intToVar.get(i).equals(intToVar.get(j));
 				structuralEquivalenceMatrix[j][i] = structuralEquivalenceMatrix[i][j];
 			}
 		}
+	}
+	
+	private void print() {
+		System.out.println("Structs:");
+		int totalStructs = 0;
+		for(String tmp : structs.keySet()) {
+			System.out.printf("%-3d: %-20s --> %s\n",totalStructs++, tmp, structs.get(tmp));
+		}
+		
+		for(int i = -1; i < totalStructs; i++)		System.out.printf("%-3d|",i);
+		System.out.println();
+		for(int i = 0; i < totalStructs; i++) {
+			System.out.printf("%-3d|",i);	
+			for (int j = 0; j < totalStructs; j++)		System.out.print(structEqMatrix[i][j]?" T |":"   |");
+			System.out.println();
+		}
+		
+		System.out.println("\nName Equivalence:");
+		for(String[] sarr : nameEquivalence) {
+			System.out.println(Arrays.toString(sarr));
+		}
+		
+		System.out.println("\nInternal Name Equivalence:");
+		for(String[] sarr : internalNameEquivalence) {
+			System.out.println(Arrays.toString(sarr));
+		}
+		
+		System.out.println("\nVariables:");
+		int totalVars = 0;
+		for(String tmp : vars.keySet()) {
+			System.out.printf("%-3d: %-20s --> %s\n",totalVars++, tmp, vars.get(tmp));
+		}
+		
+		System.out.println("\nStructural Equivalence Matrix:");
+		for(int i = -1; i < totalVars; i++)		System.out.printf("%-3d|",i);
+		System.out.println();
+		for(int i = 0; i < totalVars; i++) {
+			System.out.printf("%-3d|",i);	
+			for (int j = 0; j < totalVars; j++)		System.out.print(structuralEquivalenceMatrix[i][j]?" T |":"   |");
+			System.out.println();
+		}
+		
 	}
 	
 	public static void main(String[] args) throws IOException {
