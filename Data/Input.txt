@@ -7,11 +7,12 @@ float z;
 int  axxx[5], bxxx[5], xyz;
 int cxxx[5];
 
-struct foo  {  int h;float i,jkl;};
+struct foo  {  int h;float i,jkl; struct cat stcat;};
 struct cat{
 	int d;
 	float f;
 	float kfc;
+	struct foo strfoo;
 };
 struct strct{ int qwe[10][20]; 
 struct foo tre,*oiu[6] ; 

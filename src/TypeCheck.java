@@ -184,12 +184,11 @@ public class TypeCheck {
 		}
 		
 		System.out.println("\nStructural Equivalence Matrix:");
-		for(int i = -1; i < index; i++)		System.out.printf("%-5d|",i);
+		for(int i = -1; i < index; i++)		System.out.printf("%-3d|",i);
 		System.out.println();
 		for(int i = 0; i < index; i++) {
-			System.out.printf("%-5d|",i);
-			for(int j = 0; j <= i; j++)	System.out.printf("%5b|",structuralEquivalenceMatrix[i][j]);
-			for(int j = i+1; j < index; j++)	System.out.print("     |");	
+			System.out.printf("%-3d|",i);	
+			for (int j = 0; j < index; j++)		System.out.print(structuralEquivalenceMatrix[i][j]?" T |":"   |");
 			System.out.println();
 		}
 	}
@@ -252,7 +251,7 @@ public class TypeCheck {
 		
 		for(int i = 0; i < index; i++) {
 			for(int j = i+1; j < index; j++) {
-				if(!intToVar.get(i).equals(intToVar.get(j)))	structuralEquivalenceMatrix[i][j] = false;
+				structuralEquivalenceMatrix[i][j] = intToVar.get(i).equals(intToVar.get(j));
 				structuralEquivalenceMatrix[j][i] = structuralEquivalenceMatrix[i][j];
 			}
 		}
