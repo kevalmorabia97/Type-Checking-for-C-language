@@ -1,6 +1,4 @@
-for C language but doesnt have typedef
-
-int a[5],b[5],*x[10], z[10], *x2[10]; --> a,b are internal name equivalent, x,x2 are internal name equivalent
+for C language but doesn't support typedef
 
 1. Name equivalence is used for basic data types.
 2. Structural equivalence is used for structures.

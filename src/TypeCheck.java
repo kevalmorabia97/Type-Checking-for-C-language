@@ -356,6 +356,7 @@ public class TypeCheck {
 	//array, ptr, struct or basic
 	private String getType(String t) {
 		if(t.startsWith("array"))	return "array";
+		if(t.startsWith("func"))	return "func";
 		if(t.contains("ptr"))		return "ptr";
 		if(t.contains("struct"))	return "struct";
 		return "basic";
@@ -375,6 +376,11 @@ public class TypeCheck {
 		}
 		String t1 = getType(vars.get(v1)), t2 = getType(vars.get(v2));
 		System.out.print(t1+" "+t2+": ");
+		if(t1.equals("func") || t2.equals("func")) {
+			System.out.println("INVALID");
+			return;
+		}
+		
 		if(!t1.equals(t2)) 	System.out.println("INVALID");
 		else {
 			if(t1.equals("struct")) { // STRUCTURAL EQUIVALENCE
@@ -412,5 +418,4 @@ public class TypeCheck {
 		}
 		sc.close();
 	}
-
 }

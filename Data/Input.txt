@@ -26,6 +26,7 @@ struct foo fa [5 ], fb;
 int *square (int a1[10], int a2);
 float sq2(int b1[10], int *b2) ; 
 struct foo funcReturningStruct(int xa[4]);
+int* sameSq(int ha[10], int iii);
 
 int* pt1, notAPointer;
 int * pt2, *ppp;
