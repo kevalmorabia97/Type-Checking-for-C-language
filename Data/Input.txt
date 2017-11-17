@@ -20,7 +20,7 @@ struct foo tre,*oiu[6] ;
 
 struct foo aa,bb;
 struct cat cc;
-
+struct strct qqq;
 struct foo fa [5 ], fb;
 
 int *square (int a1[10], int a2);

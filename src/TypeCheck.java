@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Scanner;
 
 public class TypeCheck {
 	boolean[][] structuralEquivalenceMatrix, structEqMatrix;
+	LinkedHashMap<String, Integer> varToInt = new LinkedHashMap<>(); // for index in structuralEquivalenceMatrix
 	ArrayList<String[]> nameEquivalence = new ArrayList<>(), internalNameEquivalence = new ArrayList<>();
 	/* nameEquivalence
 	 * [a,b,c]
@@ -204,6 +206,7 @@ public class TypeCheck {
 				if(vars.get(key).equals(t))	al.add(key);
 			}
 			String[] sarr = (String[]) al.toArray(new String[al.size()]);
+			if(sarr.length == 1)	continue;
 			nameEquivalence.add(sarr);
 			internalNameEquivalence.add(sarr);
 		}
@@ -294,6 +297,9 @@ public class TypeCheck {
 		int totalVars = 0;	
 		for(String type : vars.values())	intToVar.put(totalVars++, type);
 		
+		totalVars = 0;	
+		for(String v : vars.keySet())	varToInt.put(v,totalVars++);
+		
 		structuralEquivalenceMatrix = new boolean[totalVars][totalVars];
 		for(int i = 0; i < totalVars; i++)	Arrays.fill(structuralEquivalenceMatrix[i],true);
 		
@@ -347,9 +353,64 @@ public class TypeCheck {
 		
 	}
 	
+	//array, ptr, struct or basic
+	private String getType(String t) {
+		if(t.startsWith("array"))	return "array";
+		if(t.contains("ptr"))		return "ptr";
+		if(t.contains("struct"))	return "struct";
+		return "basic";
+	}
+	
+	/*
+	 * Two variables are given and check if v1 = v2 assignment statement is valid or not
+	 * Rules:
+	 * 1. Name equivalence is used for basic data types.
+	 * 2. Structural equivalence is used for structures.
+	 * 3. Name equivalence is used for arrays.
+	 */
+	private void checkTypeEquivalences(String v1, String v2) { 
+		if(!vars.containsKey(v1) || !vars.containsKey(v2)) {
+			System.out.println("Undefined Variables");
+			return;
+		}
+		String t1 = getType(vars.get(v1)), t2 = getType(vars.get(v2));
+		System.out.print(t1+" "+t2+": ");
+		if(!t1.equals(t2)) 	System.out.println("INVALID");
+		else {
+			if(t1.equals("struct")) { // STRUCTURAL EQUIVALENCE
+				System.out.println(structuralEquivalenceMatrix[varToInt.get(v1)][varToInt.get(v2)]?"VALID":"INVALID");
+			}else { // NAME EQUIVALENCE
+				for(String[] nameEq : nameEquivalence) { // check if both in same name equivalence class
+					boolean found1 = false, found2 = false;
+					for(int i = 0; i < nameEq.length; i++) {
+						if(nameEq[i].equals(v1))	found1 = true;
+						else if(nameEq[i].equals(v2))	found2 = true;
+					}
+					if(found1 || found2) {
+						System.out.println(found1 && found2 ? "VALID" : "INVALID");
+						return;
+					}
+				}
+				System.out.println("INVALID");
+			}
+		}
+	}
+	
 	public static void main(String[] args) throws IOException {
 		TypeCheck tc = new TypeCheck("Data/Input.txt");
 		tc.print();
+		
+		System.out.println("\nEnter two variables seperated by ',' to check their equivalence. Enter 'DONE' when over");
+		Scanner sc = new Scanner(System.in);
+		while(true) { // Loop until "DONE" found
+			String v = sc.nextLine(); // Input 2 variables seperated by ',' Example: a,b
+			if(v.equals("DONE"))	break;
+			v = v.replace(" ","");
+			String[] variables = v.split(",");
+			if(variables.length!=2)	break;
+			tc.checkTypeEquivalences(variables[0],variables[1]);
+		}
+		sc.close();
 	}
 
 }
