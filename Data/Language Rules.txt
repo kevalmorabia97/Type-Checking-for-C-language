@@ -1,4 +1,4 @@
-for C language but doesn't support typedef
+for C language
 
 1. Name equivalence is used for basic data types.
 2. Structural equivalence is used for structures.

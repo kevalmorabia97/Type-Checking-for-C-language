@@ -4,6 +4,8 @@ int a,   b ;
 float x   , y;
 float z;
 
+typedef int cm;
+cm cmX,cmY;
 int  axxx[5], bxxx[5], xyz;
 int cxxx[5];
 
@@ -14,9 +16,18 @@ struct cat{
 	float kfc;
 	struct foo strfoo;
 };
+
+typedef struct node Node;
+typedef Node* Node2;
+typedef struct node * Node3;
+typedef Node2* n2s;
+Node2* n4;
+n2s n44;
+
 struct strct{ int qwe[10][20]; 
-struct foo tre,*oiu[6] ; 
-	float* xctg;};
+	struct foo tre ; 
+	Node3 n3sss;
+};
 
 struct foo aa,bb;
 struct cat cc;
@@ -24,9 +35,10 @@ struct strct qqq;
 struct foo fa [5 ], fb;
 
 int *square (int a1[10], int a2);
-float sq2(int b1[10], int *b2) ; 
-struct foo funcReturningStruct(int xa[4]);
+n2s sq2(int b1[10], int *b2) ; 
+struct foo funcReturnStruct(Node2 xa[4], Node* xxb[8]);
 int* sameSq(int ha[10], int iii);
+int funcWithoutArgs();
 
 int* pt1, notAPointer;
 int * pt2, *ppp;

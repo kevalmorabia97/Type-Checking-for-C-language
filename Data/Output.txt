@@ -1,7 +1,14 @@
+Typedefs:
+0  : cm                   --> int
+1  : Node                 --> struct node
+2  : Node2                --> ptr_struct node
+3  : Node3                --> ptr_struct node
+4  : n2s                  --> ptr_ptr_struct node
+
 Structs:
 0  : struct foo           --> int!float!float!struct cat
 1  : struct cat           --> int!float!float!struct foo
-2  : struct strct         --> array:10_20:int!struct foo!array:6:ptr_struct foo!ptr_float
+2  : struct strct         --> array:10_20:int!struct foo!ptr_struct node
 -1 |0  |1  |2  |
 0  | T | T |   |
 1  | T | T |   |
@@ -10,7 +17,7 @@ Structs:
 Name Equivalence:
 [aa, bb, fb]
 [x, y, z]
-[a, b, c, xyz, notAPointer]
+[a, b, c, cmX, cmY, xyz, notAPointer]
 
 Internal Name Equivalence:
 [axxx, bxxx]
@@ -18,7 +25,7 @@ Internal Name Equivalence:
 [axx, zzz]
 [aa, bb, fb]
 [x, y, z]
-[a, b, c, xyz, notAPointer]
+[a, b, c, cmX, cmY, xyz, notAPointer]
 
 Variables:
 0  : a                    --> int
@@ -27,79 +34,85 @@ Variables:
 3  : x                    --> float
 4  : y                    --> float
 5  : z                    --> float
-6  : axxx                 --> array:5:int
-7  : bxxx                 --> array:5:int
-8  : xyz                  --> int
-9  : cxxx                 --> array:5:int
-10 : aa                   --> struct foo
-11 : bb                   --> struct foo
-12 : cc                   --> struct foo
-13 : qqq                  --> struct strct
-14 : fa                   --> array:5:struct foo
-15 : fb                   --> struct foo
-16 : square               --> func|ptr_int|array:10:int!int
-17 : sq2                  --> func|float|array:10:int!ptr_int
-18 : funcReturningStruct  --> func|struct foo|array:4:int
-19 : sameSq               --> func|ptr_int|array:10:int!int
-20 : pt1                  --> ptr_int
-21 : notAPointer          --> int
-22 : pt2                  --> ptr_int
-23 : ppp                  --> ptr_int
-24 : pt3                  --> ptr_ptr_int
-25 : pt4                  --> ptr_ptr_int
-26 : axx                  --> array:5:ptr_int
-27 : zzz                  --> array:5:ptr_int
-28 : bxx                  --> array:5:ptr_int
+6  : cmX                  --> cm
+7  : cmY                  --> cm
+8  : axxx                 --> array:5:int
+9  : bxxx                 --> array:5:int
+10 : xyz                  --> int
+11 : cxxx                 --> array:5:int
+12 : n4                   --> ptr_Node2
+13 : n44                  --> n2s
+14 : aa                   --> struct foo
+15 : bb                   --> struct foo
+16 : cc                   --> struct cat
+17 : qqq                  --> struct strct
+18 : fa                   --> array:5:struct foo
+19 : fb                   --> struct foo
+20 : square               --> func|ptr_int|array:10:int!int
+21 : sq2                  --> func|n2s|array:10:int!ptr_int
+22 : funcReturnStruct     --> func|struct foo|array:4:Node2!array:8:ptr_Node
+23 : sameSq               --> func|ptr_int|array:10:int!int
+24 : funcWithoutArgs      --> func|int|
+25 : pt1                  --> ptr_int
+26 : notAPointer          --> int
+27 : pt2                  --> ptr_int
+28 : ppp                  --> ptr_int
+29 : pt3                  --> ptr_ptr_int
+30 : pt4                  --> ptr_ptr_int
+31 : axx                  --> array:5:ptr_int
+32 : zzz                  --> array:5:ptr_int
+33 : bxx                  --> array:5:ptr_int
 
 Structural Equivalence Matrix:
--1 |0  |1  |2  |3  |4  |5  |6  |7  |8  |9  |10 |11 |12 |13 |14 |15 |16 |17 |18 |19 |20 |21 |22 |23 |24 |25 |26 |27 |28 |
-0  | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
-1  | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
-2  | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
-3  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-4  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-5  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-6  |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-7  |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-8  | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
-9  |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-10 |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |
-11 |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |
-12 |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |
-13 |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-14 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-15 |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |
-16 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   | T |   |   |   |   |   |   |   |   |   |
-17 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |
-18 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |
-19 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   | T |   |   |   |   |   |   |   |   |   |
-20 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
-21 | T | T | T |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
-22 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
-23 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
-24 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |
-25 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |
-26 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
-27 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
-28 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
+-1 |0  |1  |2  |3  |4  |5  |6  |7  |8  |9  |10 |11 |12 |13 |14 |15 |16 |17 |18 |19 |20 |21 |22 |23 |24 |25 |26 |27 |28 |29 |30 |31 |32 |33 |
+0  | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+1  | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+2  | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+3  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+4  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+5  |   |   |   | T | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+6  | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+7  | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+8  |   |   |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+9  |   |   |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+10 | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+11 |   |   |   |   |   |   |   |   | T | T |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+12 |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+13 |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+14 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+15 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+16 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+17 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+18 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+19 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+20 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   | T |   |   |   |   |   |   |   |   |   |   |
+21 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |
+22 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |   |   |
+23 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   | T |   |   |   |   |   |   |   |   |   |   |
+24 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |   |   |
+25 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
+26 | T | T | T |   |   |   | T | T |   |   | T |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   |   |   |   |   |   |   |
+27 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
+28 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T |   | T | T |   |   |   |   |   |
+29 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |
+30 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T |   |   |   |
+31 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
+32 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
+33 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | T | T | T |
 
 Enter two variables seperated by ',' to check their equivalence. Enter 'DONE' when over
-a,sq2
-basic func: INVALID
+n4,n44
+ptr ptr: INVALID
+cmX,a
+basic basic: VALID
 aa,cc
 struct struct: VALID
-qqq,axxx
-struct array: INVALID
-a,c
-basic basic: VALID
-a,x
-basic basic: INVALID
-a,square
-basic func: INVALID
 square,sameSq
 func func: INVALID
-invalid,a
+invalidVar,n4
 Undefined Variables
-ptr,ppp
-Undefined Variables
+axx,zzz
+array array: INVALID
+a,sq2
+basic func: INVALID
 DONE

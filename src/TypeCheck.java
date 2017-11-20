@@ -10,6 +10,16 @@ import java.util.Scanner;
 public class TypeCheck {
 	boolean[][] structuralEquivalenceMatrix, structEqMatrix;
 	LinkedHashMap<String, Integer> varToInt = new LinkedHashMap<>(); // for index in structuralEquivalenceMatrix
+	
+	LinkedHashMap<String, String> typeDefReplacements = new LinkedHashMap<>();
+	/*
+	 * To replace Key with Value in vars for structural name equivalence
+	 * Key      Value
+	 * PtrInt   ptr_int
+	 * cm		int
+	 * Node		ptr_struct node
+	 */
+	
 	ArrayList<String[]> nameEquivalence = new ArrayList<>(), internalNameEquivalence = new ArrayList<>();
 	/* nameEquivalence
 	 * [a,b,c]
@@ -37,7 +47,7 @@ public class TypeCheck {
 	 * square  func|float|struct foo!int i.e. function with return type = float, 2 args which are 'struct foo' and 'int' respectively
 	 * func2   func|ptr_ptr_int|struct foo!float i.e. function with return type = ptr to ptr to int, 2 args which are 'struct foo' and 'float' respectively
 	 */
-	
+	LinkedHashMap<String, String > modifiedVars = new LinkedHashMap<>(); //After replacing typedefs and equivalent stucts by same struct name
 	LinkedHashMap<String,String> structs = new LinkedHashMap<>();
 	/*
 	 * Key=name     Val=struct definition
@@ -130,7 +140,7 @@ public class TypeCheck {
 		for(String arg : arguments) {
 			tempVars = getVarType(arg, false);
 			for(String v : tempVars.keySet()) {
-				structType+=tempVars.get(v)+"!";
+				structType+=getModifiedType(tempVars.get(v))+"!";
 			}
 		}
 		structType = structType.substring(0,structType.length()-1);
@@ -142,26 +152,35 @@ public class TypeCheck {
 		LinkedHashMap<String, String> tempVars;
 		s = s.replace(";","");
 		String returnType="", funcName="";
+		String modifiedReturnType="";
 		
 		tempVars = getVarType(s.substring(0,s.indexOf("(")), false);
 		if(tempVars.size()!=1) System.err.println("ERROR: FUNCTION RETURN TYPE FINDING");
 		for(String v : tempVars.keySet()) {
 			funcName = v;
 			returnType = tempVars.get(v);
+			modifiedReturnType = getModifiedType(returnType);
 		}
-
-		String[] arguments = s.substring(s.indexOf("(")+1,s.indexOf(")")).split(",");
-		
 		String funcType = "func|"+returnType+"|";
-		for(int i = 0; i < arguments.length; i++) {
-			tempVars = getVarType(arguments[i], false);
-			if(tempVars.size()!=1)	System.err.println("ERROR: FUNCTION ARGUMENT TYPE FINDING");
-			for(String v : tempVars.keySet()) {
-				funcType+=tempVars.get(v)+"!";
+		String modifiedFuncType = "func|"+modifiedReturnType+"|";
+		String argStr = s.substring(s.indexOf("(")+1,s.indexOf(")"));
+		if(argStr.length()>0) {
+			String[] arguments = argStr.split(",");
+			for(int i = 0; i < arguments.length; i++) {
+				tempVars = getVarType(arguments[i], false);
+				if(tempVars.size()!=1)	System.err.println("ERROR: FUNCTION ARGUMENT TYPE FINDING");
+				for(String v : tempVars.keySet()) {
+					funcType+=tempVars.get(v)+"!";
+					modifiedFuncType+=getModifiedType(tempVars.get(v))+"!";
+				}
+			}
+			if(arguments.length>0) {
+				funcType = funcType.substring(0, funcType.length()-1); // to remove last !
+				modifiedFuncType = modifiedFuncType.substring(0, modifiedFuncType.length()-1); // to remove last !
 			}
 		}
-		if(arguments.length>0)	funcType = funcType.substring(0, funcType.length()-1); // to remove last !
 		vars.put(funcName, funcType);
+		modifiedVars.put(funcName, modifiedFuncType);
 	}
 	
 	private void parseFile(String inputFile) throws IOException {
@@ -176,8 +195,32 @@ public class TypeCheck {
 			s = s.replace(", ", ",").replace(" ,",",").replace("; ", ";").replace(" ;",";"); 
 			s = s.replace(" (","(").replace("( ", "(").replace(" )",")").replace(") ", ")").trim(); 
 			if(s.length()==0)	continue;
-			
-			if(s.contains("(")) { // function prototype
+
+			if(s.contains("typedef")) { // s = "typedef int* PtrInt" --> substring from index 8 and replace PtrInt by ptr_int in vars
+				s = s.substring(8);
+				//int* PtrInt --> will return (PtrInt, ptr_int)
+				LinkedHashMap<String, String> typedef = getVarType(s, false);
+				if(typedef.size()!=1) {
+					System.err.println("ERROR PARSING TYPEDEF");
+					System.exit(1);
+				}
+				String key="", val="";
+				for(String k : typedef.keySet()) {
+					key = k;
+					val = typedef.get(k);
+				}
+				/*
+				 * typedef struct node N;
+				 * typedef N* N2; 
+				 * Therefore store (N2,ptr_struct node) instead of (N2,ptr_N) in typedefReplacements
+				 */
+				for(String k : typeDefReplacements.keySet()) {
+					if(val.endsWith(k)) {
+						val = val.substring(0,val.length()-k.length())+typeDefReplacements.get(k);
+					}
+				}
+				typeDefReplacements.put(key,val);
+			}else if(s.contains("(")) { // function prototype
 				addFuncType(s);
 			}else if(s.contains("struct") && (s.contains("{") || !s.contains(";"))) { // struct definition, can be single lined or multi lined
 				if(!s.contains("}")) {
@@ -189,32 +232,41 @@ public class TypeCheck {
 				addStructDef(s);
 			}else { // var type i.e. int a[10], *b, c; OR struct foo a,b[100];
 				LinkedHashMap<String,String> tempVars = getVarType(s, true);
-				for(String v : tempVars.keySet())	vars.put(v, tempVars.get(v));
+				for(String v : tempVars.keySet()) {
+					vars.put(v, tempVars.get(v));
+					modifiedVars.put(v, getModifiedType(tempVars.get(v)));
+				}
 			}
 		}
 		br.close();
 		
 		HashSet<String> types = new HashSet<>(); // contains all types except arrays, ptrs and functions
-		for(String t : vars.values()) {
+		for(String t : modifiedVars.values()) {
 			if(types.contains(t))	continue;
 			if(t.startsWith("array") || t.startsWith("func") || t.startsWith("ptr"))	continue;
 			types.add(t);
 		}
 		for(String t : types) {
 			ArrayList<String> al = new ArrayList<>();
-			for(String key : vars.keySet()) {
-				if(vars.get(key).equals(t))	al.add(key);
+			for(String key : modifiedVars.keySet()) {
+				if(modifiedVars.get(key).equals(t))	al.add(key);
 			}
 			String[] sarr = (String[]) al.toArray(new String[al.size()]);
 			if(sarr.length == 1)	continue;
 			nameEquivalence.add(sarr);
 			internalNameEquivalence.add(sarr);
-		}
-		
+		}		
 	}
 	
-	private void findStructuralEquivalence(){
-		
+	// String after replacing typedefs
+	private String getModifiedType(String s) {
+		for(String key : typeDefReplacements.keySet()) {
+			if(s.endsWith(key))	return s.substring(0, s.length()-key.length())+typeDefReplacements.get(key);
+		}
+		return s;
+	}
+	
+	private void findStructuralEquivalence(){			
 		// STEP 1: FIND STRUCTURALLY EQUIVALENT STRUCTS AND REPLACE THEM WITH ONE STRUCT
 		LinkedHashMap<String,Integer> typeToInt = new LinkedHashMap<>();
 		LinkedHashMap<Integer,String> intToType = new LinkedHashMap<>();
@@ -285,8 +337,8 @@ public class TypeCheck {
 				if(structEqMatrix[i][j]) {
 					marked[j] = true;
 					String s2 = intToType.get(j);
-					for(String v : vars.keySet()) {
-						vars.put(v,vars.get(v).replace(s2, s1));
+					for(String v : modifiedVars.keySet()) {
+						modifiedVars.put(v,modifiedVars.get(v).replace(s2, s1));
 					}
 				}
 			}
@@ -295,10 +347,10 @@ public class TypeCheck {
 		//STEP 2: FIND STRUCTURAL EQUIVALENCE MATRIX
 		LinkedHashMap<Integer,String> intToVar = new LinkedHashMap<>();
 		int totalVars = 0;	
-		for(String type : vars.values())	intToVar.put(totalVars++, type);
+		for(String type : modifiedVars.values())	intToVar.put(totalVars++, type);
 		
 		totalVars = 0;	
-		for(String v : vars.keySet())	varToInt.put(v,totalVars++);
+		for(String v : modifiedVars.keySet())	varToInt.put(v,totalVars++);
 		
 		structuralEquivalenceMatrix = new boolean[totalVars][totalVars];
 		for(int i = 0; i < totalVars; i++)	Arrays.fill(structuralEquivalenceMatrix[i],true);
@@ -312,7 +364,13 @@ public class TypeCheck {
 	}
 	
 	private void print() {
-		System.out.println("Structs:");
+		System.out.println("Typedefs:");
+		int totalTypedefs = 0;
+		for(String tmp : typeDefReplacements.keySet()) {
+			System.out.printf("%-3d: %-20s --> %s\n",totalTypedefs++, tmp, typeDefReplacements.get(tmp));
+		}
+		
+		System.out.println("\nStructs:");
 		int totalStructs = 0;
 		for(String tmp : structs.keySet()) {
 			System.out.printf("%-3d: %-20s --> %s\n",totalStructs++, tmp, structs.get(tmp));
@@ -353,7 +411,7 @@ public class TypeCheck {
 		
 	}
 	
-	//array, ptr, struct or basic
+	//array, func, ptr, struct or basic
 	private String getType(String t) {
 		if(t.startsWith("array"))	return "array";
 		if(t.startsWith("func"))	return "func";
@@ -370,11 +428,11 @@ public class TypeCheck {
 	 * 3. Name equivalence is used for arrays.
 	 */
 	private void checkTypeEquivalences(String v1, String v2) { 
-		if(!vars.containsKey(v1) || !vars.containsKey(v2)) {
+		if(!modifiedVars.containsKey(v1) || !modifiedVars.containsKey(v2)) {
 			System.out.println("Undefined Variables");
 			return;
 		}
-		String t1 = getType(vars.get(v1)), t2 = getType(vars.get(v2));
+		String t1 = getType(modifiedVars.get(v1)), t2 = getType(modifiedVars.get(v2));
 		System.out.print(t1+" "+t2+": ");
 		if(t1.equals("func") || t2.equals("func")) {
 			System.out.println("INVALID");
