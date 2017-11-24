@@ -42,7 +42,7 @@ public class TypeCheck {
 	 * aOfPtr  array:5:ptr_int i.e. array of pointer to int of size 5
 	 * a2      array:4_9:struct foo i.e. array of type struct foo, 2 dimentions which have sizes 4 & 9 respectively 
 	 * 
-	 * FUNTIOND TRANSFORMATION: func|<returnType>|<arguments seperated by !>
+	 * FUNCTION TRANSFORMATION: func|<returnType>|<arguments seperated by !>
 	 * f1      func|void| i.e. function with return type = void and no args
 	 * square  func|float|struct foo!int i.e. function with return type = float, 2 args which are 'struct foo' and 'int' respectively
 	 * func2   func|ptr_ptr_int|struct foo!float i.e. function with return type = ptr to ptr to int, 2 args which are 'struct foo' and 'float' respectively
@@ -53,8 +53,8 @@ public class TypeCheck {
 	 * Key=name     Val=struct definition
 	 * 
 	 * STRUCT TRANSFORMATION: <types of variables seperated bty !>
-	 * foo          int!float
-	 * bar          array:4:int!int!struct foo!ptr_int i.e. "struct bar{int a[4],t ; struct foo b; int* c;};"
+	 * struct foo          int!float
+	 * struct bar          array:4:int!int!struct foo!ptr_int i.e. "struct bar{int a[4],t ; struct foo b; int* c;};"
 	 */
 	
 	// CONSTRUCTOR
@@ -63,7 +63,7 @@ public class TypeCheck {
 		findStructuralEquivalence();
 	}
 	
-	// getVarType("int* *a,b[6][8];") returns (a,ptr_ptr_int) and (b,array:int:6_8)
+	// getVarType("int* *a,b[6][8];") returns (a,ptr_ptr_int) and (b,array:6_8:int)
 	private LinkedHashMap<String,String> getVarType(String s, boolean findInternalNameEquivalences) {
 		LinkedHashMap<String,String> tempVars = new LinkedHashMap<>();
 		String type;
@@ -129,7 +129,7 @@ public class TypeCheck {
 		return tempVars;
 	}
 	
-	// s = "struct foo{int a[10]; int* b; struct bar br;};"
+	// s = "struct foo{int a[10]; int* b,c; struct bar br;};"
 	private void addStructDef(String s) {
 		LinkedHashMap<String, String> tempVars;
 
@@ -345,9 +345,9 @@ public class TypeCheck {
 		}
 		
 		//STEP 2: FIND STRUCTURAL EQUIVALENCE MATRIX
-		LinkedHashMap<Integer,String> intToVar = new LinkedHashMap<>();
+		intToType = new LinkedHashMap<>();
 		int totalVars = 0;	
-		for(String type : modifiedVars.values())	intToVar.put(totalVars++, type);
+		for(String type : modifiedVars.values())	intToType.put(totalVars++, type);
 		
 		totalVars = 0;	
 		for(String v : modifiedVars.keySet())	varToInt.put(v,totalVars++);
@@ -357,7 +357,7 @@ public class TypeCheck {
 		
 		for(int i = 0; i < totalVars; i++) {
 			for(int j = i+1; j < totalVars; j++) {
-				structuralEquivalenceMatrix[i][j] = intToVar.get(i).equals(intToVar.get(j));
+				structuralEquivalenceMatrix[i][j] = intToType.get(i).equals(intToType.get(j));
 				structuralEquivalenceMatrix[j][i] = structuralEquivalenceMatrix[i][j];
 			}
 		}
