@@ -241,15 +241,15 @@ public class TypeCheck {
 		br.close();
 		
 		HashSet<String> types = new HashSet<>(); // contains all types except arrays, ptrs and functions
-		for(String t : modifiedVars.values()) {
+		for(String t : vars.values()) {
 			if(types.contains(t))	continue;
 			if(t.startsWith("array") || t.startsWith("func") || t.startsWith("ptr"))	continue;
 			types.add(t);
 		}
 		for(String t : types) {
 			ArrayList<String> al = new ArrayList<>();
-			for(String key : modifiedVars.keySet()) {
-				if(modifiedVars.get(key).equals(t))	al.add(key);
+			for(String key : vars.keySet()) {
+				if(vars.get(key).equals(t))	al.add(key);
 			}
 			String[] sarr = (String[]) al.toArray(new String[al.size()]);
 			if(sarr.length == 1)	continue;
